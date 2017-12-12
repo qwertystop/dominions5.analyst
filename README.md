@@ -1,2 +1,2 @@
-# dominions5.turnstructure
-Self-documenting parser for Dominions 5 .trn and .2h files
+# dominions5.analyst
+Project to analyze and provide statistics on Dominions 5 games. WIP.
