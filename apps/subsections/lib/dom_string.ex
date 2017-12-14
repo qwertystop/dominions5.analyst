@@ -12,3 +12,4 @@ defmodule DomString do
         if ch == 0x4f, do: {:halt, val}, else: {:cont, val}
       end)
   end
+end
