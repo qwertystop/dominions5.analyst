@@ -8,7 +8,7 @@ defmodule Header do
     :realm_id, :unk02, :unk03, :game_name, :password,
     :master_password, :turn_key
   ]
-  
+
   def unpack(io_bytestream) do
     with <<0x01, 0x02, 0x04, 0x44, 0x4f, 0x4d,
          user_id::integer-little-32,
