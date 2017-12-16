@@ -25,7 +25,7 @@ defmodule Unpack do
     quote do
       defstruct unquote(for {name, _kind, _reader} <- field_vals, do: name)
       @field_kinds unquote(field_kinds)
-      unquote(make_unpack(field_vals, __CALLER__))
+      unquote(make_unpack(field_vals, __CALLER__.module))
     end
   end
 
