@@ -34,8 +34,8 @@ defmodule Unpack do
 
   defp make_unpack(fields, module), do: make_unpack(fields, module, [], [])
   defp make_unpack([{name, kind, reader} | tail], module, acc_bind, acc_pairs) do
-    var = Macro.var(name, module)
-    input = Macro.var(:io_bytestream, module)
+    var = Macro.var(name, __MODULE__)
+    input = Macro.var(:io_bytestream, __MODULE__)
     reader = if reader == :default do
       {_, size} = kind
       quote(do: Enum.take(unquote(input), unquote(size)))
