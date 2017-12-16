@@ -30,8 +30,15 @@ defmodule Unpack do
       @type t :: %unquote(__CALLER__.module){unquote_splicing(type_kinds)}
 
       unquote(make_unpack(field_vals, __CALLER__.module))
+      unquote(make_tabulate(__CALLER__.module))
     end
   end
+
+  defprotocol Tabulate do
+    @doc "Produces an HTML table of the data with annotation"
+    def tabulate(unpacked)
+  end
+
 
   # integers are sized in bits, but we get sizes in bytes
   defp bit_type({{:integer, :little}, size}), do: quote do: integer-little-unquote(size * 8)
@@ -80,6 +87,16 @@ defmodule Unpack do
       def unpack(io_bytestream) do
         unquote_splicing(binds)
         {:ok, %unquote(module){unquote_splicing(pairs)}}
+      end
+    end
+  end
+
+  defp make_tabulate(module) do
+    quote do
+      defimpl Unpack.Tabulate, for: unquote(module) do
+        def tabulate(unpacked) do
+
+        end
       end
     end
   end
