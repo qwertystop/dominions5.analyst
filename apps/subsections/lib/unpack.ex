@@ -9,18 +9,27 @@ defmodule Unpack do
 
 
   # Macros for more convenient type specifiers
-  defmacro int32_l(name), do: quote do: {unquote(name), {{:integer, :little}, 4}, :default}
-  defmacro int32_b(name), do: quote do: {unquote(name), {{:integer, :big}, 4}, :default}
-  defmacro int16_l(name), do: quote do: {unquote(name), {{:integer, :little}, 2}, :default}
-  defmacro int16_b(name), do: quote do: {unquote(name), {{:integer, :big}, 2}, :default}
-  defmacro int8_l(name),  do: quote do: {unquote(name), {{:integer, :little}, 1}, :default}
-  defmacro int8_b(name),  do: quote do: {unquote(name), {{:integer, :big}, 1}, :default}
-  defmacro string(name, reader) when is_function(reader, 0),  do: quote do: {unquote(name), :binary, unquote(reader)}
-  defmacro string(name, size) when is_integer(size),  do: quote do: {unquote(name), {:binary, unqote(size)}, :default}
-  defmacro string(name, size, reader),  do: quote do: {unquote(name), {:binary, unquote(size)}, unquote(reader)}
+  defmacro int32_l(name),
+    do: quote do: {unquote(name), {{{:integer, :little}, 4}, :default}}
+  defmacro int32_b(name),
+    do: quote do: {unquote(name), {{{:integer, :big}, 4}, :default}}
+  defmacro int16_l(name),
+    do: quote do: {unquote(name), {{{:integer, :little}, 2}, :default}}
+  defmacro int16_b(name),
+    do: quote do: {unquote(name), {{{:integer, :big}, 2}, :default}}
+  defmacro int8_l(name), 
+    do: quote do: {unquote(name), {{{:integer, :little}, 1}, :default}}
+  defmacro int8_b(name), 
+    do: quote do: {unquote(name), {{{:integer, :big}, 1}, :default}}
+  defmacro string(name, reader) when is_function(reader, 0),
+    do: quote do: {unquote(name), {:binary, unquote(reader)}}
+  defmacro string(name, size) when is_integer(size),
+    do: quote do: {unquote(name), {{:binary, unqote(size)}, :default}}
+  defmacro string(name, size, reader),
+      do: quote do: {unquote(name), {{:binary, unquote(size)}, unquote(reader)}}
 
   defmacro __using__(fields) do
-    field_vals = for {:{}, _, [name, kind, reader]} <- fields, do: {name, kind, reader}
+    field_vals = for {name, {kind, reader}} <- fields, do: {name, kind, reader}
     field_kinds = for {name, kind, _reader} <- field_vals, do: {name, kind}
     type_kinds = for {name, kind} <- field_kinds, do: {name, tdtype(kind)}
 
