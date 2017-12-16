@@ -2,7 +2,7 @@ defmodule Unpack do
   @type kind :: {{:integer, :little | :big}, pos_integer()}
   | :binary | {:binary, pos_integer()}
   | {:unknown, pos_integer()}
-  @type reader :: :default | (Enumerable.t -> any()) # might be able to make this one more specific
+  @type reader :: :default | (Enumerable.t -> {any(), pos_integer()}) # might be able to make this one more specific
   @type field :: {atom(), kind, reader}
 
 
@@ -21,7 +21,8 @@ defmodule Unpack do
     field_vals = for {:{}, _, [name, kind, reader]} <- fields,
       do: {name, kind, reader}
     quote do
-      defstruct unquote(for {name, _type, _reader} <- field_vals, do: name)
+      defstruct unquote(for {name, _kind, _reader} <- field_vals, do: name)
+      @kinds unquote(for {name, kind, _reader} <- field_vals, do: {name, kind})
       unquote(make_unpack(field_vals, __ENV__.module))
     end
   end
@@ -29,7 +30,6 @@ defmodule Unpack do
   # integers are sized in bits, but we get sizes in bytes
   defp bit_type({{:integer, :little}, size}), do: quote(do: integer-little-unquote(size * 8))
   defp bit_type({{:integer, :big}, size}), do: quote(do: integer-big-unquote(size * 8))
-  defp bit_type(:binary), do: quote(do: binary)
   defp bit_type({:binary, size}), do: quote(do: binary-unquote(size))
 
   defp make_unpack(fields, module), do: make_unpack(fields, module, [], [])
@@ -44,10 +44,14 @@ defmodule Unpack do
     end
 
     bind = case kind do
-      {:unknown, _size} ->
-        quote(do: unquote(var) = unquote(reader))
-      _ ->
-        quote(do: <<unquote(var)::unquote(bit_type(kind))>> = unquote(reader))
+      # match through the pattern, but var is still the whole tuple
+      {:unknown, size} ->
+        quote(do: unquote(var) = {_, unquote(size)} = unquote(reader))
+      {_, size} ->
+        quote(do: unquote(var) =
+          {<<_::unquote(bit_type(kind))>>, unquote(size)} = unquote(reader))
+      :binary ->
+        quote(do: unquote(var) = {<<_::binary>>, _} = unquote(reader))
     end
 
     pair = quote(do: {unquote(name), unquote(var)})
