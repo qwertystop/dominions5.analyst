@@ -22,9 +22,13 @@ defmodule Unpack do
   defmacro __using__(fields) do
     field_vals = for {:{}, _, [name, kind, reader]} <- fields, do: {name, kind, reader}
     field_kinds = for {name, kind, _reader} <- field_vals, do: {name, kind}
+    type_kinds = for {name, kind} <- field_kinds, do: {name, tdtype(kind)}
+
     quote do
       defstruct unquote(for {name, _kind, _reader} <- field_vals, do: name)
       @field_kinds unquote(field_kinds)
+      @type t :: %unquote(__CALLER__.module){unquote_splicing(type_kinds)}
+
       unquote(make_unpack(field_vals, __CALLER__.module))
     end
   end
@@ -33,6 +37,12 @@ defmodule Unpack do
   defp bit_type({{:integer, :little}, size}), do: quote do: integer-little-unquote(size * 8)
   defp bit_type({{:integer, :big}, size}), do: quote do: integer-big-unquote(size * 8)
   defp bit_type({:binary, size}), do: quote do: binary-unquote(size)
+
+  # types for typedef from kind
+  defp tdtype({{:integer, _}, _}), do: quote do: integer()
+  defp tdtype(:binary), do: quote do: binary()
+  defp tdtype({:binary, _}), do: quote do: binary()
+  defp tdtype({:unknown, _}), do: quote do: binary()
 
   defp make_unpack(fields, module), do: make_unpack(fields, module, [], [])
   defp make_unpack([{name, kind, reader} | tail], module, acc_bind, acc_pairs) do
