@@ -34,9 +34,9 @@ defmodule Unpack do
     type_kinds = for {name, kind} <- field_kinds, do: {name, tdtype(kind)}
 
     quote do
-      defstruct unquote(for {name, _kind, _reader} <- field_vals, do: name)
+      # unfortunately, can't define struct in a macro
       @field_kinds unquote(field_kinds)
-      @type t :: %unquote(__CALLER__.module){unquote_splicing(type_kinds)}
+      @type t :: %{unquote_splicing(type_kinds)}
 
       unquote(make_unpack(field_vals, __CALLER__.module))
       unquote(make_tabulate(__CALLER__.module))
@@ -95,7 +95,7 @@ defmodule Unpack do
     quote do
       def unpack(io_bytestream) do
         unquote_splicing(binds)
-        {:ok, %unquote(module){unquote_splicing(pairs)}}
+        {:ok, %{unquote_splicing(pairs)}}
       end
     end
   end
