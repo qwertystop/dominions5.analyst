@@ -1,7 +1,7 @@
 defmodule Unpack do
   @type kind :: {{:integer, :little | :big}, pos_integer()}
   | :binary | {:binary, pos_integer()}
-  | :any
+  | {:unknown, pos_integer()}
   @type reader :: :default | (Enumerable.t -> any()) # might be able to make this one more specific
   @type field :: {atom(), kind, reader}
 
@@ -32,8 +32,8 @@ defmodule Unpack do
     end
 
     bind = case kind do
-      {:any} ->
-        quote(do: unquote(var) = unquote(reader).(unquote(input)))
+      {:unknown, _size} ->
+        quote(do: unquote(var) = unquote(reader))
       _ ->
         quote(do: <<unquote(var)::unquote(bit_type(kind))>> = unquote(reader))
     end
