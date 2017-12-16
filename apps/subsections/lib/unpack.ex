@@ -1,32 +1,41 @@
 defmodule Unpack do
-  @type kind :: {:integer, :little | :big, pos_integer()}
-  | {:binary} | {:binary, pos_integer()}
-  | {:any}
-  @type reader :: (Enumerable.t -> any()) # might be able to make this one more specific
+  @type kind :: {{:integer, :little | :big}, pos_integer()}
+  | :binary | {:binary, pos_integer()}
+  | :any
+  @type reader :: :default | (Enumerable.t -> any()) # might be able to make this one more specific
   @type field :: {atom(), kind, reader}
 
   defmacro __using__(fields) do
+    field_vals = for {:{}, _, [name, kind, reader]} <- fields,
+      do: {name, kind, reader}
     quote do
-      defstruct unquote(for {name, _type, _reader} <- fields, do: name)
-      unquote(make_unpack(fields, __ENV__.module))
+      defstruct unquote(for {name, _type, _reader} <- field_vals, do: name)
+      unquote(make_unpack(field_vals, __ENV__.module))
     end
   end
 
-  defp bit_type({:integer, :little, size}), do: quote(do: integer-little-unquote(size))
-  defp bit_type({:integer, :big, size}), do: quote(do: integer-big-unquote(size))
-  defp bit_type({:binary}), do: quote(do: binary)
+  # integers are sized in bits, but we get sizes in bytes
+  defp bit_type({{:integer, :little}, size}), do: quote(do: integer-little-unquote(size * 8))
+  defp bit_type({{:integer, :big}, size}), do: quote(do: integer-big-unquote(size * 8))
+  defp bit_type(:binary), do: quote(do: binary)
   defp bit_type({:binary, size}), do: quote(do: binary-unquote(size))
 
   defp make_unpack(fields, module), do: make_unpack(fields, module, [], [])
   defp make_unpack([{name, kind, reader} | tail], module, acc_bind, acc_pairs) do
     var = Macro.var(name, module)
     input = Macro.var(:io_bytestream, module)
+    reader = if reader == :default do
+      {_, size} = kind
+      quote(do: Enum.take(unquote(input), unquote(size)))
+    else
+      quote(do: unquote(reader).(unquote(input)))
+    end
 
     bind = case kind do
       {:any} ->
         quote(do: unquote(var) = unquote(reader).(unquote(input)))
       _ ->
-        quote(do: <<unquote(var)::unquote(bit_type(kind))>> = unquote(reader).(unquote(input)))
+        quote(do: <<unquote(var)::unquote(bit_type(kind))>> = unquote(reader))
     end
 
     pair = quote(do: {unquote(name), unquote(var)})
