@@ -2,7 +2,9 @@ defmodule Unpack do
   @type kind :: {{:integer, :little | :big}, pos_integer()}
   | :binary | {:binary, pos_integer()}
   | {:unknown, pos_integer()}
-  @type reader :: :default | (Enumerable.t -> {any(), pos_integer()}) # might be able to make this one more specific
+  # might be able to make this one more specific
+  @type reader :: :default
+  | (Enumerable.t -> {integer() | binary(), pos_integer()})
   @type field :: {atom(), kind, reader}
 
 
@@ -18,19 +20,19 @@ defmodule Unpack do
   defmacro string(name, size, reader),  do: quote do: {unquote(name), {:binary, unquote(size)}, unquote(reader)}
 
   defmacro __using__(fields) do
-    field_vals = for {:{}, _, [name, kind, reader]} <- fields,
-      do: {name, kind, reader}
+    field_vals = for {:{}, _, [name, kind, reader]} <- fields, do: {name, kind, reader}
+    field_kinds = for {name, kind, _reader} <- field_vals, do: {name, kind}
     quote do
       defstruct unquote(for {name, _kind, _reader} <- field_vals, do: name)
-      @kinds unquote(for {name, kind, _reader} <- field_vals, do: {name, kind})
-      unquote(make_unpack(field_vals, __ENV__.module))
+      @field_kinds unquote(field_kinds)
+      unquote(make_unpack(field_vals, __CALLER__))
     end
   end
 
   # integers are sized in bits, but we get sizes in bytes
-  defp bit_type({{:integer, :little}, size}), do: quote(do: integer-little-unquote(size * 8))
-  defp bit_type({{:integer, :big}, size}), do: quote(do: integer-big-unquote(size * 8))
-  defp bit_type({:binary, size}), do: quote(do: binary-unquote(size))
+  defp bit_type({{:integer, :little}, size}), do: quote do: integer-little-unquote(size * 8)
+  defp bit_type({{:integer, :big}, size}), do: quote do: integer-big-unquote(size * 8)
+  defp bit_type({:binary, size}), do: quote do: binary-unquote(size)
 
   defp make_unpack(fields, module), do: make_unpack(fields, module, [], [])
   defp make_unpack([{name, kind, reader} | tail], module, acc_bind, acc_pairs) do
