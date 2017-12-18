@@ -17,9 +17,9 @@ defmodule Unpack do
     do: quote do: {unquote(name), {{{:integer, :little}, 2}, :default}}
   defmacro int16_b(name),
     do: quote do: {unquote(name), {{{:integer, :big}, 2}, :default}}
-  defmacro int8_l(name), 
+  defmacro int8_l(name),
     do: quote do: {unquote(name), {{{:integer, :little}, 1}, :default}}
-  defmacro int8_b(name), 
+  defmacro int8_b(name),
     do: quote do: {unquote(name), {{{:integer, :big}, 1}, :default}}
   defmacro string(name, reader) when is_function(reader, 0),
     do: quote do: {unquote(name), {:binary, unquote(reader)}}
