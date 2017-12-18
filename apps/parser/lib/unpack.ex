@@ -34,9 +34,8 @@ defmodule Unpack do
     type_kinds = for {name, kind} <- field_kinds, do: {name, tdtype(kind)}
 
     quote do
-      # unfortunately, can't define struct in a macro
       @field_kinds unquote(field_kinds)
-      @type t :: %{unquote_splicing(type_kinds)}
+      @type t :: [unquote_splicing(type_kinds)]
 
       unquote(make_unpack(field_vals, __CALLER__.module))
     end
@@ -67,12 +66,15 @@ defmodule Unpack do
     bind = case kind do
       # match through the pattern, but var is still the whole tuple
       {:unknown, size} ->
-        quote(do: unquote(var) = {_, unquote(size)} = unquote(reader))
-      {_, size} ->
+        quote(do: unquote(var) = {_, :unknown, unquote(size)} = unquote(reader))
+      {:binary, size} ->
         quote(do: unquote(var) =
-          {<<_::unquote(bit_type(kind))>>, unquote(size)} = unquote(reader))
+          {<<_::unquote(bit_type(kind))>>, :binary, unquote(size)} = unquote(reader))
+      {{:integer, _}, size} ->
+        quote(do: unquote(var) =
+          {<<_::unquote(bit_type(kind))>>, :integer, unquote(size)} = unquote(reader))
       :binary ->
-        quote(do: unquote(var) = {<<_::binary>>, _} = unquote(reader))
+        quote(do: unquote(var) = {<<_::binary>>, :integer, _} = unquote(reader))
     end
 
     pair = quote(do: {unquote(name), unquote(var)})
@@ -88,7 +90,7 @@ defmodule Unpack do
     quote do
       def unpack(io_bytestream) do
         unquote_splicing(binds)
-        {:ok, %{unquote_splicing(pairs)}}
+        {:ok, %[unquote_splicing(pairs)]}
       end
     end
   end
