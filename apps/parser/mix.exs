@@ -1,9 +1,9 @@
-defmodule Subsections.Mixfile do
+defmodule Parser.Mixfile do
   use Mix.Project
 
   def project do
     [
-      app: :subsections,
+      app: :parser,
       version: "0.1.0",
       build_path: "../../_build",
       config_path: "../../config/config.exs",
