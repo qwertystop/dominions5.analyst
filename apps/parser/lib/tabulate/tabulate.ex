@@ -1,4 +1,4 @@
-defmodule Tabulate do
+defmodule Parser.Tabulate do
   require EEx
   EEx.function_from_file(:def, :table, "templates/table.eex", [:contents])
 

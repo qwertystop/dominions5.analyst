@@ -1,4 +1,4 @@
-defmodule Unpack do
+defmodule Parser.Unpack do
   @type kind :: {{:integer, :little | :big}, pos_integer()}
   | :binary | {:binary, pos_integer()}
   | {:unknown, pos_integer()}
