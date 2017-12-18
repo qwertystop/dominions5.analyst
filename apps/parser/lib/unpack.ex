@@ -27,6 +27,8 @@ defmodule Parser.Unpack do
     do: quote do: {unquote(name), {{:binary, unqote(size)}, :default}}
   defmacro string(name, size, reader),
       do: quote do: {unquote(name), {{:binary, unquote(size)}, unquote(reader)}}
+  defmacro unknown(name, size),
+    do: quote do: {unquote(name), {:unknown, unquote(size)}, :default}
 
   defmacro __using__(fields) do
     field_vals = for {name, {kind, reader}} <- fields, do: {name, kind, reader}
@@ -52,27 +54,29 @@ defmodule Parser.Unpack do
   defp tdtype({:binary, _}), do: quote do: binary()
   defp tdtype({:unknown, _}), do: quote do: binary()
 
+  # default readers
+  defp default_reader({{:integer, _}, size}), do: &Enum.take(&1, size)
+  defp default_reader({:binary, size}), do: &DomString.read(&1, size)
+  defp default_reader(:binary), do: &DomString.read(&1)
+  defp default_reader({:unknown, size}), do: &Enum.take(&1, size)
+
   defp make_unpack(fields, module), do: make_unpack(fields, module, [], [])
   defp make_unpack([{name, kind, reader} | tail], module, acc_bind, acc_pairs) do
     var = Macro.var(name, __MODULE__)
     input = Macro.var(:io_bytestream, __MODULE__)
-    reader = if reader == :default do
-      {_, size} = kind
-      quote(do: Enum.take(unquote(input), unquote(size)))
-    else
-      quote(do: unquote(reader).(unquote(input)))
-    end
+    reader = if reader == :default, do: default_reader(kind), else: reader
+    readcall = quote(unquote(reader).unquote(input))
 
     bind = case kind do
       # match through the pattern, but var is still the whole tuple
       {:unknown, size} ->
-        quote(do: unquote(var) = {_, :unknown, unquote(size)} = unquote(reader))
+        quote(do: unquote(var) = {_, :unknown, unquote(size)} = unquote(readcall).)
       {:binary, size} ->
         quote(do: unquote(var) =
-          {<<_::unquote(bit_type(kind))>>, :binary, unquote(size)} = unquote(reader))
+          {<<_::unquote(bit_type(kind))>>, :binary, unquote(size)} = unquote(readcall))
       {{:integer, _}, size} ->
         quote(do: unquote(var) =
-          {<<_::unquote(bit_type(kind))>>, :integer, unquote(size)} = unquote(reader))
+          {<<_::unquote(bit_type(kind))>>, :integer, unquote(size)} = unquote(readcall))
       :binary ->
         quote(do: unquote(var) = {<<_::binary>>, :integer, _} = unquote(reader))
     end
