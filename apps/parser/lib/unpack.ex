@@ -5,7 +5,7 @@ defmodule Parser.Unpack do
   # might be able to make this one more specific
   @type reader :: :default
   | (Enumerable.t -> {integer() | binary(), pos_integer()})
-  @type field :: {atom(), kind, reader}
+  @type field :: {atom(), {kind, reader}}
 
 
   # Macros for more convenient type specifiers
@@ -27,6 +27,8 @@ defmodule Parser.Unpack do
     do: quote do: {unquote(name), {{:binary, unqote(size)}, :default}}
   defmacro string(name, size, reader),
     do: quote do: {unquote(name), {{:binary, unquote(size)}, unquote(reader)}}
+  defmacro map(name, key={key_type, key_size}, val={val_type, val_size}),
+    do: quote do: {unquote(name), {{:map, {key, val}}, :default}}
   defmacro special(name, reader),
     do: quote do: {unquote(name), {:special, unquote(reader)}}
   defmacro unknown(name, size),
@@ -55,6 +57,7 @@ defmodule Parser.Unpack do
   defp tdtype(:binary), do: quote do: binary()
   defp tdtype({:binary, _}), do: quote do: binary()
   defp tdtype({:unknown, _}), do: quote do: binary()
+  defp tdtype({:map, {_, _}}), do: quote do: map()
 
   # default readers
   defp default_reader({{:integer, _}, size}) do
@@ -65,6 +68,9 @@ defmodule Parser.Unpack do
   end
   defp default_reader(:binary) do
     fn (input) -> {val=DomString.read(input), :binary, byte_size(val)} end
+  end
+  defp default_reader({:map, {key, val}}) do
+    fn (input) -> DomMap.read(input, key, val) end
   end
   defp default_reader({:unknown, size}) do
     fn (input) -> {Enum.take(input, size), :unknown, size} end
@@ -89,6 +95,8 @@ defmodule Parser.Unpack do
           {<<_::unquote(bit_type(kind))>>, :integer, unquote(size)} = unquote(readcall))
       :binary ->
         quote(do: unquote(var) = {<<_::binary>>, :integer, _} = unquote(readcall))
+      {:map, {_, _}} ->
+        quote(do: unquote(var) = = {_, :map, _} = unquote(readcall)
       :special ->
         quote(do: unquote(var) = {_, :special, _} = unquote(readcall)
     end
