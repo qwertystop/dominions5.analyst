@@ -3,6 +3,12 @@ defmodule DelayedEvents do
   defp read_triplearray(input_bytestream) do
     <<count::integer-little-32>> = Enum.take(input_bytestream, 4)
     contents = Enum.take(input_bytestream, count * 3)
-    [count, for <<val::integer-little-32 <- contents>>, do: val]
+    result = [count, (for <<val::integer-little-32 <- contents>>, do: val)]
+    {result, :special, count * 3 + 1}
   end
+
+  import Parser.Unpack
+  use Parser.Unpack, [
+    special(:event_array, read_triplearray/1)
+  ]
 end
