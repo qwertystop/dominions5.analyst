@@ -1,7 +1,7 @@
 defmodule Parser.Unpack do
   @type kind :: {{:integer, :little | :big}, pos_integer()}
   | :binary | {:binary, pos_integer()}
-  | {:unknown, pos_integer()}
+  | {:unknown, pos_integer()} | :special
   # might be able to make this one more specific
   @type reader :: :default
   | (Enumerable.t -> {integer() | binary(), pos_integer()})
@@ -26,7 +26,9 @@ defmodule Parser.Unpack do
   defmacro string(name, size) when is_integer(size),
     do: quote do: {unquote(name), {{:binary, unqote(size)}, :default}}
   defmacro string(name, size, reader),
-      do: quote do: {unquote(name), {{:binary, unquote(size)}, unquote(reader)}}
+    do: quote do: {unquote(name), {{:binary, unquote(size)}, unquote(reader)}}
+  defmacro special(name, reader),
+    do: quote do: {unquote(name), {:special, unquote(reader)}}
   defmacro unknown(name, size),
     do: quote do: {unquote(name), {:unknown, unquote(size)}, :default}
 
@@ -55,10 +57,18 @@ defmodule Parser.Unpack do
   defp tdtype({:unknown, _}), do: quote do: binary()
 
   # default readers
-  defp default_reader({{:integer, _}, size}), do: &Enum.take(&1, size)
-  defp default_reader({:binary, size}), do: &DomString.read(&1, size)
-  defp default_reader(:binary), do: &DomString.read(&1)
-  defp default_reader({:unknown, size}), do: &Enum.take(&1, size)
+  defp default_reader({{:integer, _}, size}) do
+    fn (input) -> {Enum.take(input, size), :integer, size} end
+  end
+  defp default_reader({:binary, size}) do
+    fn (input) -> {DomString.read(input, size), :binary, size} end
+  end
+  defp default_reader(:binary) do
+    fn (input) -> {val=DomString.read(input), :binary, byte_size(val)} end
+  end
+  defp default_reader({:unknown, size}) do
+    fn (input) -> {Enum.take(input, size), :unknown, size} end
+  end
 
   defp make_unpack(fields, module), do: make_unpack(fields, module, [], [])
   defp make_unpack([{name, kind, reader} | tail], module, acc_bind, acc_pairs) do
@@ -78,7 +88,9 @@ defmodule Parser.Unpack do
         quote(do: unquote(var) =
           {<<_::unquote(bit_type(kind))>>, :integer, unquote(size)} = unquote(readcall))
       :binary ->
-        quote(do: unquote(var) = {<<_::binary>>, :integer, _} = unquote(reader))
+        quote(do: unquote(var) = {<<_::binary>>, :integer, _} = unquote(readcall))
+      :special ->
+        quote(do: unquote(var) = {_, :special, _} = unquote(readcall)
     end
 
     pair = quote(do: {unquote(name), unquote(var)})
@@ -94,7 +106,7 @@ defmodule Parser.Unpack do
     quote do
       def unpack(io_bytestream) do
         unquote_splicing(binds)
-        {:ok, %[unquote_splicing(pairs)]}
+        {:ok, [unquote_splicing(pairs)]}
       end
     end
   end
