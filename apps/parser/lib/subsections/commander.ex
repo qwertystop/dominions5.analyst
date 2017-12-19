@@ -1,4 +1,4 @@
-defmodule Parser.Subcomponent.Commander do
+defmodule Parser.Subsections.Commander do
   import Parser.Unpack
   use Parser.Unpack, [
     string(:name),

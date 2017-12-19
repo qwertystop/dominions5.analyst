@@ -1,4 +1,4 @@
-defmodule DelayedEvents do
+defmodule Parser.Subsections.DelayedEvents do
   @moduledoc "Don't actually care about this but need to be sure of the size"
   defp read_triplearray(input_bytestream) do
     <<count::integer-little-32>> = Enum.take(input_bytestream, 4)
