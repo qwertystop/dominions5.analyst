@@ -1,4 +1,4 @@
-defmodule DomString do
+defmodule Parser.Unpack.DomString do
   @moduledoc """
   Dominions XORs its strings by 0x4f before saving.
   """
