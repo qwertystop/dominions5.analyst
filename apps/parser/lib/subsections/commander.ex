@@ -1,17 +1,20 @@
 defmodule Parser.Subsections.Commander do
-  #use Parser.Unpack, [
-  #  string(:name),
-  #  unknown(:u32_00, 4), unknown(:u32_01, 4), unknown(:u32_02, 4), 
-  #  unknown(:u32_03, 4), unknown(:u32_04, 4), unknown(:u32_05, 4),
-  #  unknown(:u16_00, 2), unknown(:u16_01, 2), unknown(:u16_02, 2),
-  #  unknown(:u16_03, 2), unknown(:u16_04, 2), unknown(:u16_05, 2),
-  #  unknown(:u16_06, 2), unknown(:u16_07, 3), unknown(:u16_08, 2),
-  #  unknown(:u16_09, 2), unknown(:u16_10, 2), unknown(:u16_11, 2),
-  #  unknown(:u16_12, 2), unknown(:u16_13, 2), unknown(:u16_14, 2), unknown(:u16_15, 2),
-  #  unknown(:u32_06, 4), unknown(:u32_07, 4), unknown(:u32_08, 4), unknown(:u32_09, 4),
-  #  unknown(:u16_16, 2), unknown(:u16_17, 2),
-  #  unknown(:u16_18, 2), unknown(:u16_19, 2), unknown(:u16_20, 2),
-  #  unknown(:u16_21, 2), unknown(:u16_22, 2), unknown(:u16_23, 2), unknown(:u16_24, 2),
-  #  unknown(:uArray, 51), unknown(:u16_25, 2)
-  #]
+  @behaviour Parser
+  @constant_size (10 * 4) + (26 * 2) + 51
+  alias Parser.Readers.{Bytes,DomString,DomInteger}
+  def read!(input) do
+    name = {_, :string, nameLength} = DomString.read(input)
+    blockspecs = [{0, 5, 4}, {0, 15, 2}, {6, 9, 4}, {16, 24, 2}]
+    unknown_block = for {low, high, size} <- blockspecs,
+      i <- low..high,
+      do: {
+        "u" <> Integer.to_string(size) <> "_" <> Integer.to_string(i),
+        DomInteger.read(input, size, :unsigned)}
+    unknown_bytes = {"unknown bytes", Bytes.read(input, 51)}
+    final_unknown = {"u16_25", DomInteger.read(input, 2)}
+    # need one list without accidentally flattening tuples,
+    # so we can't easily Enum.concat
+    result = [name | [unknown_block | [unknown_bytes | final_unknown]]]
+    {result, nameLength + @constant_size}
+  end
 end
