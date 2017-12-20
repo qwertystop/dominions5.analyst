@@ -4,17 +4,21 @@ defmodule Readers.DomString do
   """
   import Bitwise, only: [bxor: 2]
 
-  def read(io_bytestream) do
-    <<_::binary>> = Enum.reduce_while(
-      io_bytestream, <<>>,
+  def read(input_bytestream) do
+    <<value::binary>> = Enum.reduce_while(
+      input_bytestream, <<>>,
       fn <<ch::8>>, acc ->
         val = <<acc::binary, bxor(ch, 0x4f)>>
         if ch == 0x4f, do: {:halt, val}, else: {:cont, val}
       end)
+      {value, :string, byte_size(value)}
   end
 
-  def read(io_bytestream, count) do
-    <<_::binary>> = for <<c::8>> <-
-      Enum.take(io_bytestream, count), into: <<>>, do: bxor(c, 0x4f)
+  def read(input_bytestream, count) do
+    <<value::binary>> = for <<c::8>> <-
+      Enum.take(input_bytestream, count),
+      into: <<>>,
+      do: bxor(c, 0x4f)
+    {value, :string, count}
   end
 end
