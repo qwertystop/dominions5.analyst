@@ -7,7 +7,7 @@ defmodule DomMap do
   defp read_key_int(source, key_size, val_size, acc_map=%{}\\%{}, acc_size\\0) do
     <<key::integer-little-size(key_size)>> = Enum.take(source, key_size)
     if key == 0 do
-      {acc, :map, acc_size + key_size}
+      {acc_map, :map, acc_size + key_size}
     else
       read_val_int(source, key_size, val_size, acc_map, acc_size + key_size, key)
     end

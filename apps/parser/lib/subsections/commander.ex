@@ -12,7 +12,7 @@ defmodule Parser.Subsections.Commander do
     unknown(:u32_06, 4), unknown(:u32_07, 4), unknown(:u32_08, 4), unknown(:u32_09, 4),
     unknown(:u16_16, 2), unknown(:u16_17, 2),
     unknown(:u16_18, 2), unknown(:u16_19, 2), unknown(:u16_20, 2),
-    unknown(:u16_21, 2), unknown(:u16_22, 2), unknown(:u16_23, 2), unknown(:u16_24, 2)
+    unknown(:u16_21, 2), unknown(:u16_22, 2), unknown(:u16_23, 2), unknown(:u16_24, 2),
     unknown(:uArray, 51), unknown(:u16_25, 2)
   ]
 end

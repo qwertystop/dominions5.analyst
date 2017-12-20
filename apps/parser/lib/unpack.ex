@@ -27,8 +27,8 @@ defmodule Parser.Unpack do
     do: quote do: {unquote(name), {{:binary, unqote(size)}, :default}}
   defmacro string(name, size, reader),
     do: quote do: {unquote(name), {{:binary, unquote(size)}, unquote(reader)}}
-  defmacro map(name, key={key_type, key_size}, val={val_type, val_size}),
-    do: quote do: {unquote(name), {{:map, {key, val}}, :default}}
+  defmacro map(name, key={_key_type, _key_size}, val={_val_type, _val_size}),
+    do: quote do: {unquote(name), {{:map, {unquote(key), unquote(val)}}, :default}}
   defmacro special(name, reader),
     do: quote do: {unquote(name), {:special, unquote(reader)}}
   defmacro unknown(name, size),
@@ -43,7 +43,7 @@ defmodule Parser.Unpack do
       @field_kinds unquote(field_kinds)
       @type t :: [unquote_splicing(type_kinds)]
 
-      unquote(make_unpack(field_vals, __CALLER__.module))
+      unquote(make_unpack(field_vals))
     end
   end
 
@@ -67,7 +67,10 @@ defmodule Parser.Unpack do
     fn (input) -> {DomString.read(input, size), :binary, size} end
   end
   defp default_reader(:binary) do
-    fn (input) -> {val=DomString.read(input), :binary, byte_size(val)} end
+    fn (input) ->
+      val = DomString.read(input)
+      {val, :binary, byte_size(val)}
+    end
   end
   defp default_reader({:map, {key, val}}) do
     fn (input) -> DomMap.read(input, key, val) end
@@ -76,17 +79,17 @@ defmodule Parser.Unpack do
     fn (input) -> {Enum.take(input, size), :unknown, size} end
   end
 
-  defp make_unpack(fields, module), do: make_unpack(fields, module, [], [])
-  defp make_unpack([{name, kind, reader} | tail], module, acc_bind, acc_pairs) do
+  defp make_unpack(fields), do: make_unpack(fields, [], [])
+  defp make_unpack([{name, kind, reader} | tail], acc_bind, acc_pairs) do
     var = Macro.var(name, __MODULE__)
     input = Macro.var(:io_bytestream, __MODULE__)
     reader = if reader == :default, do: default_reader(kind), else: reader
-    readcall = quote(unquote(reader).unquote(input))
+    readcall = quote(do: unquote(reader).unquote(input))
 
     bind = case kind do
       # match through the pattern, but var is still the whole tuple
       {:unknown, size} ->
-        quote(do: unquote(var) = {_, :unknown, unquote(size)} = unquote(readcall).)
+        quote(do: unquote(var) = {_, :unknown, unquote(size)} = unquote(readcall))
       {:binary, size} ->
         quote(do: unquote(var) =
           {<<_::unquote(bit_type(kind))>>, :binary, unquote(size)} = unquote(readcall))
@@ -96,19 +99,19 @@ defmodule Parser.Unpack do
       :binary ->
         quote(do: unquote(var) = {<<_::binary>>, :integer, _} = unquote(readcall))
       {:map, {_, _}} ->
-        quote(do: unquote(var) = = {_, :map, _} = unquote(readcall)
+        quote(do: unquote(var) = {_, :map, _} = unquote(readcall))
       :special ->
-        quote(do: unquote(var) = {_, :special, _} = unquote(readcall)
+        quote(do: unquote(var) = {_, :special, _} = unquote(readcall))
     end
 
     pair = quote(do: {unquote(name), unquote(var)})
 
-    make_unpack(tail, module,
+    make_unpack(tail,
          [bind | acc_bind],
          [pair | acc_pairs]
     )
   end
-  defp make_unpack([], module, acc_bind, acc_pairs) do
+  defp make_unpack([], acc_bind, acc_pairs) do
     binds = Enum.reverse(acc_bind)
     pairs = Enum.reverse(acc_pairs)
     quote do

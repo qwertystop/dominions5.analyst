@@ -1,19 +1,19 @@
 defmodule Parser.Tabulate do
   require EEx
-  EEx.function_from_file(:def, :table, "templates/table.eex", [:contents])
+  EEx.function_from_file(:def, :table, "lib/tabulate/templates/table.eex", [:contents])
 
   def tabulate(parsed) do
     parsed |> prep_contents |> table
   end
 
-  @spec prep_contents([{atom, {any, atom, pos_integer}}...]) ::
+  @spec prep_contents([{atom, {any, atom, pos_integer}}, ...]) ::
         [{pos_integer, atom, atom, any}]
   def prep_contents(parsed) do
     parsed
     |> Enum.reduce([{0, :dummy, :dummy, :dummy}],
-                   fn({name, {val, type, size}}, tail=[{offset,_,_,_}|_rest]) do
+                   fn({name, {val, type, size}}, tail=[{offset,_,_,_}|_rest]) ->
                         value = construct_value(val, type)
-                        [{size + offset, name, type, val} | tail]
+                        [{size + offset, name, type, value} | tail]
                    end
     )
     |> Enum.reverse
