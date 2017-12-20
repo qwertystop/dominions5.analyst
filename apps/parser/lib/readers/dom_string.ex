@@ -4,7 +4,8 @@ defmodule Readers.DomString do
   """
   import Bitwise, only: [bxor: 2]
 
-  def read(input_bytestream) do
+  @spec read!(Enumerable.type) :: Parser.field
+  def read!(input_bytestream) do
     <<value::binary>> = Enum.reduce_while(
       input_bytestream, <<>>,
       fn <<ch::8>>, acc ->
@@ -14,7 +15,8 @@ defmodule Readers.DomString do
       {value, :string, byte_size(value)}
   end
 
-  def read(input_bytestream, count) do
+  @spec read!(Enumerable.type, pos_integer) :: Parser.field
+  def read!(input_bytestream, count) do
     <<value::binary>> = for <<c::8>> <-
       Enum.take(input_bytestream, count),
       into: <<>>,
