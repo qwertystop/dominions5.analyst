@@ -2,15 +2,14 @@ defmodule Parser.Subsections.Header do
   @moduledoc """
   Header of all Dom5 files
   """
-  import Parser.Unpack
-  use Parser.Unpack, [
-    unknown(:signature, 6),
-    int32_l(:user_id), int32_l(:turn_number),
-    int32_l(:unk00), int32_l(:unk01), int32_l(:realm_id),
-    int32_l(:unk02), int32_l(:unk03), string(:game_name),
-    string(:password), string(:master_password),
-    int32_l(:turn_key)
-  ]
+  #use Parser.Unpack, [
+  #  unknown(:signature, 6),
+  #  int32_l(:user_id), int32_l(:turn_number),
+  #  int32_l(:unk00), int32_l(:unk01), int32_l(:realm_id),
+  #  int32_l(:unk02), int32_l(:unk03), string(:game_name),
+  #  string(:password), string(:master_password),
+  #  int32_l(:turn_key)
+  #]
 
   #  def unpack(io_bytestream) do
   #  with <<0x01, 0x02, 0x04, 0x44, 0x4f, 0x4d,

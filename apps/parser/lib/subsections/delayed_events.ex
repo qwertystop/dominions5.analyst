@@ -7,8 +7,7 @@ defmodule Parser.Subsections.DelayedEvents do
     {result, :special, count * 3 + 1}
   end
 
-  import Parser.Unpack
-  use Parser.Unpack, [
-    special(:event_array, read_triplearray/1)
-  ]
+  #use Parser.Unpack, [
+  #  special(:event_array, read_triplearray/1)
+  #]
 end

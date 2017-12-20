@@ -1,4 +1,4 @@
-defmodule DomMap do
+defmodule Readers.DomMap do
   # simple case, will define others only if they prove necessary
   def read(io_bytestream, {:integer, key_size}, {:integer, val_size}) do
     read_key_int(io_bytestream, key_size, val_size)

@@ -1,5 +1,4 @@
 defmodule Parser.Subsections.EndStats do
-  @moduledoc "Don't actually care about this but need to be sure of the size"
   defp read_endstats(input_bytestream) do
     <<count::integer-little-32>> = Enum.take(input_bytestream, 4)
     if count > 0 do
@@ -12,7 +11,7 @@ defmodule Parser.Subsections.EndStats do
     end
   end
 
-  use Parser.Unpack, [
-    unknown(:endstats, read_endstats/1)
-  ]
+  # use Parser.Unpack, [
+  #   unknown(:endstats, read_endstats/1)
+  # ]
 end
