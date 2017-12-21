@@ -1,11 +1,17 @@
 defmodule Parser.Subsections.EnchantmentData do
-  #use Parser.Unpack, [
-  #  unknown(:sentinel, 2),
-  #  unknown(:u32_00, 4),
-  #  unknown(:u16_00, 2), unknown(:u16_01, 2), unknown(:u16_02, 2),
-  #  unknown(:u16_03, 2), unknown(:u16_04, 2), unknown(:u16_05, 2),
-  #  unknown(:u32_01, 4), unknown(:u32_02, 4), 
-  #  unknown(:u32_03, 4), unknown(:u32_04, 4), unknown(:u32_05, 4),
-  #  unknown(:u16_06, 2)
-  #]
+  @behaviour Parser
+  alias Parser.Readers.DomInteger
+  def read!(input) do
+    # define necessary readers
+    u32 = fn -> DomInteger.read!(input, 4, :unsigned) end
+    u16 = fn -> DomInteger.read!(input, 2, :unsigned) end
+    # sentinel is the only signed value here
+    parsed = [
+      sentinel: DomInteger.read!(input, 2),
+      u32_00: u32.(), u16_00: u16.(), u16_01: u16.(), u16_02: u16.(),
+      u16_03: u16.(), u16_04: u16.(), u16_05: u16.(), u32_01: u32.(),
+      u32_02: u32.(), u32_03: u32.(), u32_04: u32.(), u32_05: u32.(),
+      u16_06: u16.()]
+    {parsed, :section, 4*6 + 2*8}
+  end
 end
