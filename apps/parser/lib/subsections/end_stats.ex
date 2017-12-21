@@ -1,17 +1,16 @@
 defmodule Parser.Subsections.EndStats do
-  defp read_endstats(input_bytestream) do
+  @behaviour Parser
+  alias Parser.Readers.DomInteger
+  def read!(input_bytestream) do
     <<count::integer-little-32>> = Enum.take(input_bytestream, 4)
+    # positive count means 8 arrays of 16-bit (2-byte) ints, 200 entries/count
+    # But I don't actually care about the contents at the moment, only the size
     if count > 0 do
-      # positive count means eight arrays of 16-bit (2-byte) ints, with 200 entries per count
-      contents = Enum.take(input_bytestream, 8 * 2 * 200 * count)
-      result = [count, (for <<val::integer-little-16 <- contents>>, do: val)]
-      {result, :unknown, count * 3 + 1}
+      get_next = fn -> DomInteger.read!(input_bytestream, 2) end
+      contents = for _ <- 1..(8*200*count), do: get_next.()
+      {[count: count, contents: contents], :section, 8*200*count*2 + 4}
     else
-      {count, :unknown, 4}
+      {[count: count], :section, 4}
     end
   end
-
-  # use Parser.Unpack, [
-  #   unknown(:endstats, read_endstats/1)
-  # ]
 end
