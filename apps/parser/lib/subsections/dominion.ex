@@ -8,11 +8,9 @@ defmodule Parser.Subsections.Dominion do
     u32_00 = DomInteger.read!(input, 4, :unsigned)
     u32_01 = DomInteger.read!(input, 4, :unsigned)
     unknownMap = {_, {:map, :integer}, mapSize} = DomMap.read!(input, {:integer, 4}, {:integer, 4})
-    {[{"unknown bytes", unknownBytes},
-      {"name", name},
-      {"u32_00", u32_00},
-      {"u32_01", u32_01},
-      {"unknown map", unknownMap}],
+    {[unknown_bytes: unknownBytes,
+      name: name, u32_00: u32_00, u32_01: u32_01,
+      unknown_map: unknownMap],
      :section, @constant_part_size + nameSize + mapSize}
   end
 end

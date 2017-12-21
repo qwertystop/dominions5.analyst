@@ -15,6 +15,6 @@ defmodule Parser.Subsections.DelayedEvents do
     base = {Enum.reverse(base), {:list, :integer}, 4 * count}
     turn = {Enum.reverse(turn), {:list, :integer}, 4 * count}
     lunar = {Enum.reverse(lunar), {:list, :integer}, 4 * count}
-    {[{"base", base}, {"turn", turn}, {"lunar", lunar}], :section, (count * 3 * 4) + 4}
+    {[base: base, turn: turn, lunar: lunar], :section, (count * 3 * 4) + 4}
   end
 end

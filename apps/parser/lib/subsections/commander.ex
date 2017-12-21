@@ -8,10 +8,10 @@ defmodule Parser.Subsections.Commander do
     unknown_block = for {low, high, size} <- blockspecs,
       i <- low..high,
       do: {
-        "u" <> Integer.to_string(size) <> "_" <> Integer.to_string(i),
+        String.to_atom("u" <> Integer.to_string(size) <> "_" <> Integer.to_string(i)),
         DomInteger.read(input, size, :unsigned)}
-    unknown_bytes = {"unknown bytes", Bytes.read(input, 51)}
-    final_unknown = {"u16_25", DomInteger.read(input, 2)}
+    unknown_bytes = {:unknown_bytes, Bytes.read(input, 51)}
+    final_unknown = {:u16_25, DomInteger.read(input, 2)}
     # need one list without accidentally flattening tuples,
     # so we can't easily Enum.concat
     result = [name | [unknown_block | [unknown_bytes | final_unknown]]]
