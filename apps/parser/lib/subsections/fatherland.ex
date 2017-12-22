@@ -11,7 +11,6 @@ defmodule Parser.Subsections.Fatherland do
       calendars: DomMap.read!(input, {:integer, 4}, {:integer, 8}),
       cal_sentry: Bytes.read!(input, 4),
       zoom: DomFloat.read!(input, 4),
-      # TODO maps with subsections for values
       lands: DomMap.read!({:integer, 4}, {:section, Land}),
       kingdoms: DomMap.read!({:integer, 4}, {:section, Kingdom}),
       commanders: DomMap.read!({:integer, 4}, {:section, Commander}),
