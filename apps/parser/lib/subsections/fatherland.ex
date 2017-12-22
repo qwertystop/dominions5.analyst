@@ -1,7 +1,10 @@
 defmodule Parser.Subsections.Fatherland do
   @behaviour Parser
-  alias Parser.Readers.{Bytes,DomMap,DomFloat}
-  alias Parser.Subsections.{Header,Settings,Land,Kingdom,Commander,Dominion,SpellData,MercenaryData,EnchantmentData}
+  alias Parser.Readers.{Bytes,DomMap,DomFloat,DomString}
+  alias Parser.Subsections.{
+    Commander, DelayedEvents, Dominion, EnchantmentData,
+    EndStats, Header, Kingdom, Land, MercenaryData,
+    Settings, SpellData}
   def read!(input) do
     # This first chunk is simple enough to inline
     parsed = [
