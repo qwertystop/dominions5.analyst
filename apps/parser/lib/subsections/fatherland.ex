@@ -41,8 +41,9 @@ defmodule Parser.Subsections.Fatherland do
     # TODO improve abstraction on array of non-single-byte reading
     <<hero_count::integer-little-32>> = Enum.take(input, 4)
     heroes = Bytes.read!(input, (hero_count + 1) * 2)
-    unkRXN = DomString.read!(input, length: 50, mask: 0x78) 
+    unkRXN = DomString.read!(input, length: 50, mask: 0x78)
     end_stats = EndStats.read!(input)
+    # TODO make these sentineled blocks fill in nil if wrong value
     # sentinel should be exactly 4475, and then a count
     <<4475::integer-little-32, event_ct::integer-little-32>> = Enum.take(input, 8)
     # Events is another list of int16

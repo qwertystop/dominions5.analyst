@@ -23,8 +23,7 @@ defmodule Parser.Readers.DomString do
       do: bxor(c, mask)
     {value, :string, count}
   end
-
-  def read!(input_bytestream, []), do: read!(input_bytestream, mask: 0x4f)
   def read!(input_bytestream, length: count),
     do: read!(input_bytestream, length: count, mask: 0x4f)
+  def read!(input_bytestream), do: read!(input_bytestream, mask: 0x4f)
 end

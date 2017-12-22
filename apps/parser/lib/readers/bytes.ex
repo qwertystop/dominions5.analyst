@@ -1,4 +1,4 @@
-defmodule Readers.Bytes do
+defmodule Parser.Readers.Bytes do
   @moduledoc """
   For sequences of bytes, type unknown
   """
