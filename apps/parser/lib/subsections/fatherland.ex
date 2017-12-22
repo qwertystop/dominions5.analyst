@@ -25,7 +25,16 @@ defmodule Parser.Subsections.Fatherland do
     ]
     # After that it gets more complex
     # scores is based on contents of Settings
-    scores = nil # TODO scores
+    hall_of_fame_count = (
+      parsed
+      |> Keyword.get(:settings) |> elem(0)
+      |> Keyword.get(:hall_of_fame_count) |> elem(0)
+    )
+    scores = if hall_of_fame_count > 0 do
+      Bytes.read!(input, hall_of_fame_count * 2)
+    else
+      {nil, :bytes, 0}
+    end
     items = Bytes.read!(input, 1000)
     war_data = Bytes.read!(input, 40000)
     # heroes is a list of int16, length specified by int32
