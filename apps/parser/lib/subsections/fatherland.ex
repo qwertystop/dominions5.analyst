@@ -3,7 +3,7 @@ defmodule Parser.Subsections.Fatherland do
   alias Parser.Readers.{Bytes,DomMap,DomFloat,DomString}
   alias Parser.Subsections.{
     Commander, DelayedEvents, Dominion, EnchantmentData,
-    EndStats, Header, Kingdom, Land, MercenaryData,
+    EndStats, Header, Kingdom, Land.InFatherland, MercenaryData,
     Settings, SpellData}
   def read!(input) do
     # This first chunk is simple enough to inline
@@ -14,7 +14,7 @@ defmodule Parser.Subsections.Fatherland do
       calendars: DomMap.read!(input, {:integer, 4}, {:integer, 8}),
       cal_sentry: Bytes.read!(input, 4),
       zoom: DomFloat.read!(input, 4),
-      lands: DomMap.read!({:integer, 4}, {:section, Land}),
+      lands: DomMap.read!({:integer, 4}, {:section, InFatherland}),
       kingdoms: DomMap.read!({:integer, 4}, {:section, Kingdom}),
       commanders: DomMap.read!({:integer, 4}, {:section, Commander}),
       dominions: DomMap.read!({:integer, 4}, {:section, Dominion}),
@@ -44,6 +44,7 @@ defmodule Parser.Subsections.Fatherland do
     unkRXN = DomString.read!(input, length: 50, mask: 0x78)
     end_stats = EndStats.read!(input)
     # TODO make these sentineled blocks fill in nil if wrong value
+    # TODO  and include them in output for checking
     # sentinel should be exactly 4475, and then a count
     <<4475::integer-little-32, event_ct::integer-little-32>> = Enum.take(input, 8)
     # Events is another list of int16
@@ -59,8 +60,8 @@ defmodule Parser.Subsections.Fatherland do
       unkRXN: unkRXN, end_stats: end_stats, events: events,
       delayed_events: delayed_events,
     ]
-
+    # size needs to include the 20 bytes on sentinels and counts
     {parsed, :section,
-      Enum.reduce(parsed, 0, fn {_, _, size}, acc -> acc + size end)}
+      Enum.reduce(parsed, 20, fn {_, _, size}, acc -> acc + size end)}
   end
 end
